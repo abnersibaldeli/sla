@@ -1,0 +1,283 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+const PlatformGame = () => {
+  // Estados do jogo
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [score, setScore] = useState(0);
+  const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 300 });
+  const [playerVelocity, setPlayerVelocity] = useState({ x: 0, y: 0 });
+  const [isJumping, setIsJumping] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Referências
+  const gameRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>();
+  const platformsRef = useRef([
+    { x: 0, y: 400, width: 400, height: 20 },
+    { x: 450, y: 350, width: 150, height: 20 },
+    { x: 650, y: 300, width: 150, height: 20 },
+    { x: 850, y: 250, width: 150, height: 20 },
+    { x: 1050, y: 200, width: 150, height: 20 }
+  ]);
+
+  // Constantes do jogo
+  const GRAVITY = 0.5;
+  const JUMP_FORCE = -12;
+  const PLAYER_SIZE = 40;
+  const GAME_WIDTH = 800;
+  const GAME_HEIGHT = 500;
+
+  // Detectar dispositivo
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Iniciar jogo
+  const startGame = () => {
+    setGameStarted(true);
+    setGameOver(false);
+    setScore(0);
+    setPlayerPosition({ x: 50, y: 300 });
+    setPlayerVelocity({ x: 0, y: 0 });
+    setIsJumping(false);
+    
+    // Iniciar loop do jogo
+    animationRef.current = requestAnimationFrame(gameLoop);
+  };
+
+  // Controles de teclado
+  useEffect(() => {
+    if (!gameStarted || gameOver) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isJumping) {
+        jump();
+      }
+      if (e.code === 'ArrowRight') {
+        setPlayerVelocity(prev => ({ ...prev, x: 5 }));
+      }
+      if (e.code === 'ArrowLeft') {
+        setPlayerVelocity(prev => ({ ...prev, x: -5 }));
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
+        setPlayerVelocity(prev => ({ ...prev, x: 0 }));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [gameStarted, gameOver, isJumping]);
+
+  // Pular
+  const jump = () => {
+    if (!isJumping) {
+      setPlayerVelocity(prev => ({ ...prev, y: JUMP_FORCE }));
+      setIsJumping(true);
+    }
+  };
+
+  // Mover para direita
+  const moveRight = () => {
+    setPlayerVelocity(prev => ({ ...prev, x: 5 }));
+  };
+
+  // Mover para esquerda
+  const moveLeft = () => {
+    setPlayerVelocity(prev => ({ ...prev, x: -5 }));
+  };
+
+  // Parar movimento
+  const stopMovement = () => {
+    setPlayerVelocity(prev => ({ ...prev, x: 0 }));
+  };
+
+  // Loop principal do jogo
+  const gameLoop = () => {
+    if (!gameStarted || gameOver) return;
+
+    // Atualizar posição
+    setPlayerPosition(prev => ({
+      x: Math.max(0, Math.min(GAME_WIDTH - PLAYER_SIZE, prev.x + playerVelocity.x)),
+      y: prev.y + playerVelocity.y
+    }));
+
+    // Aplicar gravidade
+    setPlayerVelocity(prev => ({ ...prev, y: prev.y + GRAVITY }));
+
+    // Verificar colisão com plataformas
+    const onPlatform = platformsRef.current.some(platform => {
+      return (
+        playerPosition.x + PLAYER_SIZE > platform.x &&
+        playerPosition.x < platform.x + platform.width &&
+        playerPosition.y + PLAYER_SIZE >= platform.y &&
+        playerPosition.y + PLAYER_SIZE <= platform.y + 10 &&
+        playerVelocity.y > 0
+      );
+    });
+
+    if (onPlatform) {
+      setPlayerVelocity(prev => ({ ...prev, y: 0 }));
+      setPlayerPosition(prev => ({ ...prev, y: platformsRef.current.find(p => 
+        prev.x + PLAYER_SIZE > p.x &&
+        prev.x < p.x + p.width &&
+        prev.y + PLAYER_SIZE >= p.y &&
+        prev.y + PLAYER_SIZE <= p.y + 10
+      )?.y! - PLAYER_SIZE || prev.y }));
+      setIsJumping(false);
+    }
+
+    // Verificar se caiu
+    if (playerPosition.y > GAME_HEIGHT) {
+      setGameOver(true);
+      cancelAnimationFrame(animationRef.current!);
+      return;
+    }
+
+    // Atualizar pontuação
+    setScore(prev => prev + 1);
+
+    // Continuar loop
+    animationRef.current = requestAnimationFrame(gameLoop);
+  };
+
+  // Limpar animação ao desmontar
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <h1 className="text-3xl font-bold text-foreground mb-4">Jogo de Plataforma</h1>
+      
+      {/* Área do jogo */}
+      <div 
+        ref={gameRef}
+        className="relative bg-muted border-2 border-border rounded-lg overflow-hidden"
+        style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}
+      >
+        {/* Personagem */}
+        {gameStarted && !gameOver && (
+          <div 
+            className="absolute bg-primary rounded-md"
+            style={{
+              width: PLAYER_SIZE,
+              height: PLAYER_SIZE,
+              left: playerPosition.x,
+              top: playerPosition.y,
+              transition: 'top 0.1s linear, left 0.1s linear'
+            }}
+          />
+        )}
+
+        {/* Plataformas */}
+        {gameStarted && platformsRef.current.map((platform, index) => (
+          <div
+            key={index}
+            className="absolute bg-secondary"
+            style={{
+              left: platform.x,
+              top: platform.y,
+              width: platform.width,
+              height: platform.height
+            }}
+          />
+        ))}
+
+        {/* Tela inicial */}
+        {!gameStarted && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-4">Jogo de Plataforma</h2>
+              <p className="text-muted-foreground mb-6">Use as setas para mover e espaço para pular</p>
+              <button 
+                onClick={startGame}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Iniciar Jogo
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Game Over */}
+        {gameOver && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-4">Game Over!</h2>
+              <p className="text-muted-foreground mb-2">Pontuação: {score}</p>
+              <button 
+                onClick={startGame}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Jogar Novamente
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Controles mobile */}
+      {isMobile && gameStarted && !gameOver && (
+        <div className="mt-6 w-full max-w-md">
+          <div className="flex justify-between mb-4">
+            <button
+              onTouchStart={moveLeft}
+              onTouchEnd={stopMovement}
+              className="bg-secondary text-secondary-foreground p-4 rounded-lg text-xl font-bold"
+            >
+              ←
+            </button>
+            <button
+              onTouchStart={moveRight}
+              onTouchEnd={stopMovement}
+              className="bg-secondary text-secondary-foreground p-4 rounded-lg text-xl font-bold"
+            >
+              →
+            </button>
+          </div>
+          <button
+            onTouchStart={jump}
+            className="bg-accent text-accent-foreground p-4 rounded-lg text-xl font-bold w-full"
+          >
+            PULAR
+          </button>
+        </div>
+      )}
+
+      {/* Pontuação */}
+      {gameStarted && !gameOver && (
+        <div className="mt-4">
+          <p className="text-xl font-semibold text-foreground">Pontuação: {score}</p>
+        </div>
+      )}
+
+      {/* Instruções */}
+      {!isMobile && (
+        <div className="mt-6 text-center text-muted-foreground">
+          <p>Controles: ← → para mover, Espaço para pular</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PlatformGame;
