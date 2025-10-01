@@ -1,0 +1,104 @@
+/* Geral */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #282c34;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Container principal */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Título */
+.title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #fff;
+}
+
+/* Área do jogo */
+.game-area {
+  position: relative;
+  background-color: #444;
+  border: 2px solid #666;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Personagem */
+.player {
+  position: absolute;
+  background-color: #ff6347;
+  border-radius: 5px;
+  transition: top 0.1s linear, left 0.1s linear;
+}
+
+/* Plataformas */
+.platform {
+  position: absolute;
+  background-color: #2e8b57;
+  border-radius: 3px;
+}
+
+/* Tela de sobreposição */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  flex-direction: column;
+}
+
+.subtitle {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.instructions {
+  margin-bottom: 20px;
+}
+
+.start-button {
+  padding: 10px 20px;
+  background-color: #ff6347;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.start-button:hover {
+  background-color: #ff4500;
+}
+
+/* Game Ove*
