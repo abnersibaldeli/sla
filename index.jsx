@@ -10,7 +10,7 @@ const PlatformGame = () => {
   const [playerVelocity, setPlayerVelocity] = useState({ x: 0, y: 0 });
   const [isJumping, setIsJumping] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Referências
   const gameRef = useRef(null);
   const animationRef = useRef(null);
@@ -48,8 +48,6 @@ const PlatformGame = () => {
     setPlayerPosition({ x: 50, y: 300 });
     setPlayerVelocity({ x: 0, y: 0 });
     setIsJumping(false);
-    
-    // Iniciar loop do jogo
     animationRef.current = requestAnimationFrame(gameLoop);
   };
 
@@ -58,21 +56,13 @@ const PlatformGame = () => {
     if (!gameStarted || gameOver) return;
 
     const handleKeyDown = (e) => {
-      if (e.code === 'Space' && !isJumping) {
-        jump();
-      }
-      if (e.code === 'ArrowRight') {
-        setPlayerVelocity(prev => ({ ...prev, x: 5 }));
-      }
-      if (e.code === 'ArrowLeft') {
-        setPlayerVelocity(prev => ({ ...prev, x: -5 }));
-      }
+      if (e.code === 'Space' && !isJumping) jump();
+      if (e.code === 'ArrowRight') moveRight();
+      if (e.code === 'ArrowLeft') moveLeft();
     };
 
     const handleKeyUp = (e) => {
-      if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
-        setPlayerVelocity(prev => ({ ...prev, x: 0 }));
-      }
+      if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') stopMovement();
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -84,44 +74,34 @@ const PlatformGame = () => {
     };
   }, [gameStarted, gameOver, isJumping]);
 
-  // Pular
+  // Função de pulo
   const jump = () => {
     if (!isJumping) {
-      setPlayerVelocity(prev => ({ ...prev, y: JUMP_FORCE }));
+      setPlayerVelocity((prev) => ({ ...prev, y: JUMP_FORCE }));
       setIsJumping(true);
     }
   };
 
-  // Mover para direita
-  const moveRight = () => {
-    setPlayerVelocity(prev => ({ ...prev, x: 5 }));
-  };
-
-  // Mover para esquerda
-  const moveLeft = () => {
-    setPlayerVelocity(prev => ({ ...prev, x: -5 }));
-  };
-
-  // Parar movimento
-  const stopMovement = () => {
-    setPlayerVelocity(prev => ({ ...prev, x: 0 }));
-  };
+  // Funções de movimento
+  const moveRight = () => setPlayerVelocity((prev) => ({ ...prev, x: 5 }));
+  const moveLeft = () => setPlayerVelocity((prev) => ({ ...prev, x: -5 }));
+  const stopMovement = () => setPlayerVelocity((prev) => ({ ...prev, x: 0 }));
 
   // Loop principal do jogo
   const gameLoop = () => {
     if (!gameStarted || gameOver) return;
 
     // Atualizar posição
-    setPlayerPosition(prev => ({
+    setPlayerPosition((prev) => ({
       x: Math.max(0, Math.min(GAME_WIDTH - PLAYER_SIZE, prev.x + playerVelocity.x)),
       y: prev.y + playerVelocity.y
     }));
 
     // Aplicar gravidade
-    setPlayerVelocity(prev => ({ ...prev, y: prev.y + GRAVITY }));
+    setPlayerVelocity((prev) => ({ ...prev, y: prev.y + GRAVITY }));
 
     // Verificar colisão com plataformas
-    const onPlatform = platformsRef.current.some(platform => {
+    const onPlatform = platformsRef.current.some((platform) => {
       return (
         playerPosition.x + PLAYER_SIZE > platform.x &&
         playerPosition.x < platform.x + platform.width &&
@@ -132,13 +112,16 @@ const PlatformGame = () => {
     });
 
     if (onPlatform) {
-      setPlayerVelocity(prev => ({ ...prev, y: 0 }));
-      setPlayerPosition(prev => ({ ...prev, y: platformsRef.current.find(p => 
-        prev.x + PLAYER_SIZE > p.x &&
-        prev.x < p.x + p.width &&
-        prev.y + PLAYER_SIZE >= p.y &&
-        prev.y + PLAYER_SIZE <= p.y + 10
-      )?.y! - PLAYER_SIZE || prev.y }));
+      setPlayerVelocity((prev) => ({ ...prev, y: 0 }));
+      setPlayerPosition((prev) => ({
+        ...prev,
+        y: platformsRef.current.find((platform) => 
+          prev.x + PLAYER_SIZE > platform.x &&
+          prev.x < platform.x + platform.width &&
+          prev.y + PLAYER_SIZE >= platform.y &&
+          prev.y + PLAYER_SIZE <= platform.y + 10
+        )?.y - PLAYER_SIZE || prev.y
+      }));
       setIsJumping(false);
     }
 
@@ -150,7 +133,7 @@ const PlatformGame = () => {
     }
 
     // Atualizar pontuação
-    setScore(prev => prev + 1);
+    setScore((prev) => prev + 1);
 
     // Continuar loop
     animationRef.current = requestAnimationFrame(gameLoop);
@@ -159,9 +142,7 @@ const PlatformGame = () => {
   // Limpar animação ao desmontar
   useEffect(() => {
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, []);
 
@@ -170,14 +151,14 @@ const PlatformGame = () => {
       <h1 className="title">Jogo de Plataforma</h1>
       
       {/* Área do jogo */}
-      <div 
+      <div
         ref={gameRef}
         className="game-area"
         style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}
       >
         {/* Personagem */}
         {gameStarted && !gameOver && (
-          <div 
+          <div
             className="player"
             style={{
               width: PLAYER_SIZE,
@@ -273,4 +254,11 @@ const PlatformGame = () => {
       {/* Instruções */}
       {!isMobile && (
         <div className="controls-instructions">
-          <p>Controles: ← → para mover, Espaço para pular
+          <p>Controles: ← → para mover, Espaço para pular</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PlatformGame;
