@@ -1,64 +1,81 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 
 const App = () => {
-  const [numberToGuess, setNumberToGuess] = useState(Math.floor(Math.random() * 100) + 1);
-  const [userGuess, setUserGuess] = useState("");
-  const [message, setMessage] = useState("");
-  const [attempts, setAttempts] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+    const canvasRef = useRef(null);
+    const [car, setCar] = useState({ x: 400, y: 300, angle: 0, speed: 0 });
+    const [keys, setKeys] = useState({});
 
-  const handleGuess = () => {
-    setAttempts(attempts + 1);
-    if (parseInt(userGuess) === numberToGuess) {
-      setMessage(`Você acertou! O número era ${numberToGuess}.`);
-      setGameOver(true);
-    } else if (parseInt(userGuess) < numberToGuess) {
-      setMessage("Tente um número maior.");
-    } else {
-      setMessage("Tente um número menor.");
-    }
-    setUserGuess("");
-  };
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
 
-  const handleRestart = () => {
-    setNumberToGuess(Math.floor(Math.random() * 100) + 1);
-    setUserGuess("");
-    setMessage("");
-    setAttempts(0);
-    setGameOver(false);
-  };
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw track (simple circle for drifting)
+            ctx.beginPath();
+            ctx.arc(400, 300, 200, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'gray';
+            ctx.lineWidth = 10;
+            ctx.stroke();
+            
+            // Draw car
+            ctx.save();
+            ctx.translate(car.x, car.y);
+            ctx.rotate(car.angle);
+            ctx.fillStyle = 'red';
+            ctx.fillRect(-15, -10, 30, 20);
+            ctx.restore();
+        };
 
-  return (
-    <div className="container">
-      <h1>Jogo de Adivinhação</h1>
-      <p>Tente adivinhar um número entre 1 e 100!</p>
+        const update = () => {
+            let newCar = { ...car };
+            if (keys.ArrowUp) newCar.speed += 0.1;
+            if (keys.ArrowDown) newCar.speed -= 0.05;
+            if (keys.ArrowLeft) newCar.angle -= 0.05;
+            if (keys.ArrowRight) newCar.angle += 0.05;
+            
+            // Drift mechanics (simplified)
+            if (keys.ArrowLeft || keys.ArrowRight) {
+                newCar.speed *= 0.98; // Slow down during drift
+            }
+            
+            newCar.x += Math.cos(newCar.angle) * newCar.speed;
+            newCar.y += Math.sin(newCar.angle) * newCar.speed;
+            newCar.speed *= 0.95; // Friction
+            
+            setCar(newCar);
+        };
 
-      <div className="input-group">
-        <input
-          type="number"
-          value={userGuess}
-          onChange={(e) => setUserGuess(e.target.value)}
-          disabled={gameOver}
-          placeholder="Digite seu palpite"
-        />
-        <button onClick={handleGuess} disabled={gameOver}>
-          Adivinhar
-        </button>
-      </div>
+        const gameLoop = () => {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        };
+        
+        gameLoop();
+    }, [car, keys]);
 
-      {message && (
-        <p className={gameOver ? "success" : "error"}>
-          {message} {gameOver && `Você tentou ${attempts} vezes.`}
-        </p>
-      )}
+    useEffect(() => {
+        const handleKeyDown = (e) => setKeys(prev => ({ ...prev, [e.key]: true }));
+        const handleKeyUp = (e) => setKeys(prev => ({ ...prev, [e.key]: false }));
+        
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
 
-      {gameOver && (
-        <button className="restart-btn" onClick={handleRestart}>
-          Reiniciar Jogo
-        </button>
-      )}
-    </div>
-  );
+    return (
+        <div className="game-container">
+            <h1>Drift Car Game</h1>
+            <canvas ref={canvasRef} width={800} height={600}></canvas>
+            <p>Use arrow keys to drive and drift!</p>
+        </div>
+    );
 };
 
 export default App;

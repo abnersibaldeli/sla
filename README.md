@@ -1,19 +1,13 @@
-# Jogo de Adivinhação de Número
+Jogo de Drift Car
+Um jogo simples de drift de carros baseado na web, desenvolvido com React e HTML5 Canvas.
 
-Este é um jogo simples onde você deve adivinhar um número aleatório entre 1 e 100. O jogo te dirá se o seu palpite é maior ou menor que o número correto. Quando você acertar, o jogo mostrará o número de tentativas que você fez.
-
-## Como Jogar
-
-1. Adivinhe o número inserindo seu palpite no campo de texto.
-2. Clique em "Adivinhar".
-3. O jogo irá informá-lo se o palpite é maior ou menor que o número correto.
-4. Quando você acertar, o jogo informará o número de tentativas e a opção de reiniciar o jogo.
-
-## Como Rodar
-
-Para rodar este projeto localmente:
-
-1. Clone o repositório.
-2. Instale as dependências:
-   ```bash
-   npm install
+Características
+Noções básicas de movimentação de carros e mecânica de drifting.
+Pista circular para drifting.
+Controles do teclado (teclas de seta).
+Como jogar
+Use as setas do teclado para controlar o carro:
+Para cima: Acelerar
+Para baixo: Freio
+Esquerda/Direita: Virar (derrapagem mantendo o dedo pressionado enquanto se move)
+Tente fazer drift na pista!
