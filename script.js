@@ -7,7 +7,7 @@ let smokeParticles = []; // Array to hold smoke particles
 
 // Load car image (replace with your own image path)
 const carImage = new Image();
-carImage.src = 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fpt.pngtree.com%2Ffreepng%2Fa-red-sports-car-seen-from-above-parked-on-street_15908850.html&psig=AOvVaw3TOyySMBQM74cnwEw5R4X2&ust=1763059030081000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCPCfr-2g7ZADFQAAAAAdAAAAABAE'; // Placeholder: Use a top-down car PNG (e.g., 30x20 pixels or similar)
+carImage.src = 'img/carro.png'; // Placeholder: Use a top-down car PNG (e.g., 30x20 pixels or similar)
 
 // Smoke particle class
 class SmokeParticle {
